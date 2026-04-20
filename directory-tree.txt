@@ -1,0 +1,17 @@
+com.projects.statementdeliveryservice
+│
+├── domain                  # Pure business rules (no Spring dependencies)
+│   ├── model               # Entities (Client, BankAccount, Statement)
+│   └── gateway             # Output interfaces (BankIntegrationGateway, WhatsAppGateway)
+│
+├── application             # Business orchestration
+│   └── usecases             # Use cases (SendDailyStatementUseCase, RequestStatementOnDemand)
+│
+├── infrastructure          # Technical details and implementations
+│   ├── config              # Spring configurations (Beans, Security)
+│   ├── integration         # Gateway implementations (SantanderFeignClient, TwilioClient)
+│   └── persistence         # Repositories (JPA/Mongo) if we need to persist bot state
+│
+└── presentation            # Application entry points
+    ├── web                 # Webhooks (receive WhatsApp messages)
+    └── scheduler           # Cron jobs (daily trigger using @Scheduled)
