@@ -1,3 +1,16 @@
 spring:
   application:
     name: statement-delivery-service
+
+  mail:
+    host: imap.gmail.com
+    port: 993
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        store:
+          protocol: imaps
+        imaps:
+          timeout: 10000
+          connectiontimeout: 10000
