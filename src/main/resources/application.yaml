@@ -6,7 +6,7 @@ spring:
     host: imap.gmail.com
     port: 993
     username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    password: ${MAIL_CODE}
     properties:
       mail:
         store:
