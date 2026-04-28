@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(name = "messageAppClient", url = "${whatsapp.api.url}")
-public interface MessageAppFeignClient {
+public interface WhatsAppFeignClient {
 
     @PostMapping(value = "/message/sendMedia/{instance}", consumes = "application/json")
     void sendMedia(

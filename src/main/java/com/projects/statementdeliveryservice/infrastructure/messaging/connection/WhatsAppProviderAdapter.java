@@ -3,6 +3,7 @@ package com.projects.statementdeliveryservice.infrastructure.messaging.connectio
 import com.projects.statementdeliveryservice.domain.gateway.MessageAppGateway;
 import com.projects.statementdeliveryservice.domain.model.Client;
 import com.projects.statementdeliveryservice.domain.model.Statement;
+import com.projects.statementdeliveryservice.infrastructure.messaging.dto.MediaMessageRequest;
 import com.projects.statementdeliveryservice.infrastructure.messaging.dto.SendMediaRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -12,15 +13,15 @@ import java.util.Base64;
 @Component
 public class WhatsAppProviderAdapter implements MessageAppGateway {
 
-    private final MessageAppFeignClient messageAppFeignClient;
+    private final WhatsAppFeignClient whatsAppFeignClient;
     private final String instanceName;
     private final String apiKey;
 
     public WhatsAppProviderAdapter(
-            MessageAppFeignClient messageAppFeignClient,
+            WhatsAppFeignClient whatsAppFeignClient,
             @Value("${whatsapp.api.instance}") String instanceName,
             @Value("${whatsapp.api.key}") String apiKey) {
-        this.messageAppFeignClient = messageAppFeignClient;
+        this.whatsAppFeignClient = whatsAppFeignClient;
         this.instanceName = instanceName;
         this.apiKey = apiKey;
     }
@@ -32,8 +33,8 @@ public class WhatsAppProviderAdapter implements MessageAppGateway {
 
                 String base64Pdf = Base64.getEncoder().encodeToString(statement.getFileContent());
 
-                SendMediaRequest request = SendMediaRequest.builder()
-                        .number(client.getMessageAppNumber())
+                // 1. Monta o bloco do arquivo
+                MediaMessageRequest mediaObj = MediaMessageRequest.builder()
                         .mediatype("document")
                         .mimetype("application/pdf")
                         .fileName(statement.getFileName())
@@ -41,7 +42,12 @@ public class WhatsAppProviderAdapter implements MessageAppGateway {
                         .caption(message)
                         .build();
 
-                messageAppFeignClient.sendMedia(instanceName, apiKey, request);
+                SendMediaRequest request = SendMediaRequest.builder()
+                        .number(client.getMessageAppNumber())
+                        .mediaMessage(mediaObj)
+                        .build();
+
+                whatsAppFeignClient.sendMedia(instanceName, apiKey, request);
 
                 System.out.println("Extrato enviado com sucesso para o número: " + client.getMessageAppNumber());
             } else {

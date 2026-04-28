@@ -10,22 +10,29 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/webhook/whatsapp")
-public class MessageAppWebhookController {
-
-    @Value("${spring.mail.username}")
-    private static String MAIL_USERNAME;
-
-    @Value("${USER_PHONE}")
-    private String USER_PHONE;
+public class WhatsAppWebhookController {
 
     private final RequestStatementOnDemandUseCase onDemandUseCase;
+    private final String mailUsername;
+    private final String userPhone;
 
-    public MessageAppWebhookController(RequestStatementOnDemandUseCase onDemandUseCase) {
+
+    public WhatsAppWebhookController(
+            RequestStatementOnDemandUseCase onDemandUseCase,
+            @Value("${spring.mail.username}") String mailUsername,
+            @Value("${USER_PHONE}") String userPhone) {
+
         this.onDemandUseCase = onDemandUseCase;
+        this.mailUsername = mailUsername;
+        this.userPhone = userPhone;
     }
 
     @PostMapping("/receive")
     public ResponseEntity<Void> receiveMessage(@RequestBody Map<String, Object> payload) {
+
+        System.out.println("====== PAYLOAD RECEBIDO DA EVOLUTION ======");
+        System.out.println(payload);
+        System.out.println("===========================================");
 
         String incomingMessage = extractTextFromPayload(payload);
         String senderNumber = extractNumberFromPayload(payload);
@@ -45,18 +52,35 @@ public class MessageAppWebhookController {
     }
 
     private String extractTextFromPayload(Map<String, Object> payload) {
-        // Exemplo fictício. Você ajustará isso quando plugar o Evolution API ou Twilio.
         try {
-            return (String) ((Map<?, ?>) payload.get("message")).get("text");
+            Map<String, Object> data = (Map<String, Object>) payload.get("data");
+            Map<String, Object> message = (Map<String, Object>) data.get("message");
+
+            if (message.containsKey("conversation")) {
+                return (String) message.get("conversation");
+
+            } else if (message.containsKey("extendedTextMessage")) {
+
+                Map<String, Object> extended = (Map<String, Object>) message.get("extendedTextMessage");
+
+                return (String) extended.get("text");
+            }
         } catch (Exception e) {
-            return null;
+            System.err.println("Erro ao extrair texto do webhook: " + e.getMessage());
         }
+        return null;
     }
 
     private String extractNumberFromPayload(Map<String, Object> payload) {
         try {
-            return (String) payload.get("sender");
+            String sender = (String) payload.get("sender");
+
+            if (sender != null && sender.contains("@")) {
+                return sender.split("@")[0];
+            }
+            return sender;
         } catch (Exception e) {
+            System.err.println("Erro ao extrair número do webhook: " + e.getMessage());
             return null;
         }
     }
@@ -65,8 +89,8 @@ public class MessageAppWebhookController {
         return Client.builder()
                 .id("CLI-001")
                 .name("Cliente Teste")
-                .messageAppNumber(USER_PHONE)
-                .monitoringEmail(MAIL_USERNAME)
+                .messageAppNumber(userPhone)
+                .monitoringEmail(mailUsername)
                 .build();
     }
 }
